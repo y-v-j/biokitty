@@ -1,0 +1,79 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+
+  // ---------------------------------------------------------------------
+  // Logo: porin — a 16-strand beta-barrel from the outer membrane of
+  // Rhodobacter capsulatus (PDB 2POR).
+  //
+  // Rendered locally from public-domain PDB coordinates with
+  //     tools/pdb-logo.py 2por --name porin --rows 24 --outdir fastfetch
+  // which also printed the box below. config-gfp.jsonc explains each
+  // field; the only per-logo values are the image and its cell box.
+  // ---------------------------------------------------------------------
+  "logo": {
+    "type": "kitty-direct",
+    "source": "~/.config/fastfetch/porin.png",
+    "width": 42,
+    "height": 24,
+    "preserveAspectRatio": true,
+    "padding": {
+      "top": 1,
+      "left": 2,
+      "right": 4
+    }
+  },
+
+  // ---------------------------------------------------------------------
+  // Display
+  // ---------------------------------------------------------------------
+  "display": {
+    "separator": "  ",
+    "color": {
+      "keys": "38;5;39",
+      "title": "38;5;123"
+    }
+  },
+
+  // ---------------------------------------------------------------------
+  // Modules: fastfetch's stock default set, listed explicitly.
+  //
+  // This list is not optional — a config file with no "modules" key renders
+  // the logo and nothing else, rather than falling back to the defaults.
+  //
+  // Delete any line to drop that row. `fastfetch --list-modules` shows every
+  // available module. To put a Nerd Font icon on a row (you have Fantasque
+  // Sans Mono Nerd Font installed), replace the bare string with an object:
+  //   { "type": "os", "key": " 󰣛" }
+  // ---------------------------------------------------------------------
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "display",
+    "de",
+    "wm",
+    "wmtheme",
+    "theme",
+    "icons",
+    "font",
+    "cursor",
+    "terminal",
+    "terminalfont",
+    "cpu",
+    "gpu",
+    "memory",
+    "swap",
+    "disk",
+    "localip",
+    "battery",
+    "poweradapter",
+    "locale",
+    "break",
+    "colors"
+  ]
+}

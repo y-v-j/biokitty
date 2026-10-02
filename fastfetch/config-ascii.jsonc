@@ -1,0 +1,88 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+
+  // ---------------------------------------------------------------------
+  // Logo: the binary DNA double helix, replacing the distro logo.
+  //
+  // The art lives in dna.txt beside this file. It is plain text with $1..$4
+  // colour placeholders, so you can edit the helix by hand without touching
+  // any escape codes. Regenerate it with gen_dna.py if you want a different
+  // width, height, or twist.
+  // ---------------------------------------------------------------------
+  "logo": {
+    "type": "file",
+    "source": "~/.config/fastfetch/dna.txt",
+
+    // 256-colour SGR codes, deep blue through bright cyan, matching the
+    // reference image. $1 is both backbones; $2..$4 cycle down the rungs to
+    // fake a vertical gradient. Change these to re-tint the helix.
+    "color": {
+      "1": "38;5;123",
+      "2": "38;5;33",
+      "3": "38;5;39",
+      "4": "38;5;51"
+    },
+
+    // Left padding indents the block; right padding is the gutter between the
+    // helix and the info column. Raise "right" if the two feel cramped.
+    "padding": {
+      "top": 1,
+      "left": 2,
+      "right": 4
+    }
+  },
+
+  // ---------------------------------------------------------------------
+  // Display
+  // ---------------------------------------------------------------------
+  "display": {
+    "separator": "  ",
+    "color": {
+      "keys": "38;5;39",
+      "title": "38;5;123"
+    }
+  },
+
+  // ---------------------------------------------------------------------
+  // Modules: fastfetch's stock default set, listed explicitly.
+  //
+  // This list is not optional — a config file with no "modules" key renders
+  // the logo and nothing else, rather than falling back to the defaults.
+  //
+  // Delete any line to drop that row. `fastfetch --list-modules` shows every
+  // available module. To put a Nerd Font icon on a row (you have Fantasque
+  // Sans Mono Nerd Font installed), replace the bare string with an object:
+  //   { "type": "os", "key": " 󰣛" }
+  // ---------------------------------------------------------------------
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "display",
+    "de",
+    "wm",
+    "wmtheme",
+    "theme",
+    "icons",
+    "font",
+    "cursor",
+    "terminal",
+    "terminalfont",
+    "cpu",
+    "gpu",
+    "memory",
+    "swap",
+    "disk",
+    "localip",
+    "battery",
+    "poweradapter",
+    "locale",
+    "break",
+    "colors"
+  ]
+}

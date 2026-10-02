@@ -1,0 +1,111 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+
+  // ---------------------------------------------------------------------
+  // Logo: green fluorescent protein (PDB 1EMA), drawn with kitty's
+  // graphics protocol.
+  //
+  // "kitty-direct" hands kitty the file path and lets it decode and blit the
+  // actual pixels, so what you see is the image itself — not an ASCII
+  // approximation of it. This only works in a terminal that speaks the kitty
+  // graphics protocol; see config-ascii.jsonc for the portable fallback.
+  //
+  // The source is a copy kept beside this config on purpose, so reorganising
+  // ~/Projects can't break your prompt.
+  // ---------------------------------------------------------------------
+  "logo": {
+    // The source MUST be a PNG. kitty's graphics protocol accepts only
+    // f=24 (raw RGB), f=32 (raw RGBA) and f=100 (PNG) — there is no JPEG
+    // support. Pointing this at the original .jpg makes kitty try to parse
+    // JPEG bytes as PNG, fail, and render nothing at all, silently.
+    // gfp.png comes straight out of PyMOL's ray tracer with a transparent
+    // background, so its alpha is genuinely anti-aliased. Colour-keying an
+    // image that was saved against white gives hard, stair-stepped edges
+    // instead, which looks rough at terminal size.
+    //
+    // It is also pre-scaled to 2x its on-screen size so kitty only has to
+    // halve it. Letting kitty reduce a much larger source chews up the thin
+    // cel-shading outlines. Regenerate with tools/pdb-logo.py.
+    "type": "kitty-direct",
+    "source": "~/.config/fastfetch/gfp.png",
+
+    // Bounding box in terminal cells, not pixels.
+    //
+    // Rendered at 1200x1648, cropped to content, pre-scaled to 600x824.
+    // A cell is ~2.2x taller than wide, so at 24 rows it needs:
+    //     cols = 0.7282 x 24 rows x 2.2  =  38
+    // Total line width is 2 + 38 + 4 + 61 = 105, inside the 110-column window.
+    // The barrel is rendered upright rather than on its side; lying down it
+    // wants 54 columns and overflows.
+    //
+    // If you change one of these, rescale the other by the same ratio.
+    "width": 38,
+    "height": 24,
+
+    // The guarantee against distortion: fit inside width x height without
+    // stretching either axis. Never set this false with a non-matching box.
+    "preserveAspectRatio": true,
+
+    // Left padding indents the block; right padding is the gutter before the
+    // info column. Raise "right" if the two feel cramped.
+    "padding": {
+      "top": 1,
+      "left": 2,
+      "right": 4
+    }
+  },
+
+  // ---------------------------------------------------------------------
+  // Display
+  // ---------------------------------------------------------------------
+  "display": {
+    "separator": "  ",
+    "color": {
+      "keys": "38;5;39",
+      "title": "38;5;123"
+    }
+  },
+
+  // ---------------------------------------------------------------------
+  // Modules: fastfetch's stock default set, listed explicitly.
+  //
+  // This list is not optional — a config file with no "modules" key renders
+  // the logo and nothing else, rather than falling back to the defaults.
+  //
+  // Delete any line to drop that row. `fastfetch --list-modules` shows every
+  // available module. To put a Nerd Font icon on a row (you have Fantasque
+  // Sans Mono Nerd Font installed), replace the bare string with an object:
+  //   { "type": "os", "key": " 󰣛" }
+  // ---------------------------------------------------------------------
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "display",
+    "de",
+    "wm",
+    "wmtheme",
+    "theme",
+    "icons",
+    "font",
+    "cursor",
+    "terminal",
+    "terminalfont",
+    "cpu",
+    "gpu",
+    "memory",
+    "swap",
+    "disk",
+    "localip",
+    "battery",
+    "poweradapter",
+    "locale",
+    "break",
+    "colors"
+  ]
+}

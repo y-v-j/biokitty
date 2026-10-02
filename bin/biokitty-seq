@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# Run a biotools operation on stdin and hold the result on screen.
+#
+# Meant to be launched by kitty into an overlay window with the current
+# selection piped in:
+#
+#   map ctrl+shift+b>r launch --type=overlay --stdin-source=@selection \
+#       biokitty-seq revcomp
+#
+# The trailing "press any key" is what makes it usable as an overlay — the
+# window would otherwise close the instant the command finished.
+#
+#   biokitty-seq <biotools-command> [args...]
+#
+# Works outside kitty too; without a tty it just prints and exits.
+
+set -uo pipefail
+
+op="${1:-stats}"
+shift || true
+
+# Find biotools.py: installed location first, then next to this script, so
+# the repo copy works before install.sh has been run.
+for candidate in \
+    "${KITTY_CONFIG_DIRECTORY:-$HOME/.config/kitty}/kittens/biotools.py" \
+    "$(dirname "$(readlink -f "$0")")/../kittens/biotools.py"
+do
+    if [[ -r "$candidate" ]]; then BIOTOOLS="$candidate"; break; fi
+done
+
+if [[ -z "${BIOTOOLS:-}" ]]; then
+    printf 'biokitty: cannot find biotools.py\n' >&2
+    exit 1
+fi
+
+input="$(cat)"
+
+# Colours, but only when attached to a terminal.
+if [[ -t 1 ]]; then bold=$'\e[1m'; dim=$'\e[2m'; reset=$'\e[0m'
+else bold=''; dim=''; reset=''; fi
+
+printf '%s⬣ %s%s\n\n' "$bold" "$op" "$reset"
+
+if [[ -z "${input//[[:space:]]/}" ]]; then
+    printf 'Nothing selected.\n\nSelect a sequence in the terminal first, then try again.\n'
+else
+    printf '%s' "$input" | python3 "$BIOTOOLS" "$op" "$@"
+    status=$?
+    (( status == 0 )) || printf '\n%sbiotools exited %d%s\n' "$dim" "$status" "$reset"
+fi
+
+if [[ -t 0 || -t 1 ]]; then
+    printf '\n%s── any key to close ──%s' "$dim" "$reset"
+    read -rsn1 </dev/tty 2>/dev/null || true
+    printf '\n'
+fi

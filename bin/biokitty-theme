@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+#
+# biokitty theme switcher
+#
+#   biokitty-theme                 show the active theme and list the rest
+#   biokitty-theme gfp             switch to themes/gfp.conf
+#   biokitty-theme helix           substring match: picks digital-helix
+#   biokitty-theme random          pick one at random
+#   biokitty-theme --next          cycle to the next theme
+#
+# Switching does two things:
+#
+#   1. copies the chosen theme over ~/.config/kitty/active-theme.conf, which
+#      kitty.conf includes, so the choice survives a restart;
+#   2. pushes the colours into every running kitty window over the remote
+#      control socket, so it takes effect immediately without a reload.
+#
+# Step 2 needs "allow_remote_control socket-only" and "listen_on unix:@biokitty"
+# from ui.conf. If the socket is not there, the theme is still written and
+# applies to the next window you open.
+
+set -euo pipefail
+
+CONFIG_DIR="${KITTY_CONFIG_DIRECTORY:-$HOME/.config/kitty}"
+THEME_DIR="$CONFIG_DIR/themes"
+ACTIVE_CONF="$CONFIG_DIR/active-theme.conf"
+ACTIVE_NAME="$CONFIG_DIR/active-theme"
+
+die() { printf '%s\n' "$*" >&2; exit 1; }
+
+[[ -d "$THEME_DIR" ]] || die "no theme directory at $THEME_DIR — run install.sh first"
+
+mapfile -t THEMES < <(find "$THEME_DIR" -maxdepth 1 -name '*.conf' -printf '%f\n' | sed 's/\.conf$//' | sort)
+(( ${#THEMES[@]} )) || die "no themes found in $THEME_DIR"
+
+current() { [[ -r "$ACTIVE_NAME" ]] && cat "$ACTIVE_NAME" || echo ""; }
+
+list() {
+    local cur; cur="$(current)"
+    echo "themes in $THEME_DIR:"
+    local t
+    for t in "${THEMES[@]}"; do
+        if [[ "$t" == "$cur" ]]; then printf '  * %s\n' "$t"; else printf '    %s\n' "$t"; fi
+    done
+    echo
+    echo "switch with: biokitty-theme <name|substring|random|--next>"
+}
+
+# Resolve a user-supplied name to exactly one theme.
+resolve() {
+    local want="$1" t hits=()
+    for t in "${THEMES[@]}"; do [[ "$t" == "$want" ]] && { printf '%s' "$t"; return 0; }; done
+    for t in "${THEMES[@]}"; do [[ "$t" == *"$want"* ]] && hits+=("$t"); done
+    case ${#hits[@]} in
+        1) printf '%s' "${hits[0]}" ;;
+        0) die "no theme matches '$want'. Try: ${THEMES[*]}" ;;
+        *) die "'$want' is ambiguous: ${hits[*]}" ;;
+    esac
+}
+
+# Every kitty instance gets its own socket: "listen_on unix:@biokitty" in
+# ui.conf becomes @biokitty-<pid> at runtime, because kitty appends its PID.
+# So there is no single well-known address to talk to.
+#
+# Inside kitty, KITTY_LISTEN_ON already names the right one. Outside it (a
+# keybinding launched with --type=background still counts as inside), fall
+# back to reading the abstract sockets out of /proc/net/unix, which also
+# catches the case of several kitty windows open at once.
+sockets() {
+    if [[ -n "${KITTY_LISTEN_ON:-}" ]]; then
+        printf '%s\n' "$KITTY_LISTEN_ON"
+        return
+    fi
+    [[ -r /proc/net/unix ]] || return 0
+    grep -o '@biokitty-[0-9]\+' /proc/net/unix 2>/dev/null | sort -u | sed 's/^/unix:/'
+}
+
+apply() {
+    local name="$1" file="$THEME_DIR/$1.conf"
+    [[ -r "$file" ]] || die "cannot read $file"
+
+    install -Dm644 "$file" "$ACTIVE_CONF"
+    printf '%s\n' "$name" > "$ACTIVE_NAME"
+
+    local kitten_bin=""
+    if command -v kitten >/dev/null 2>&1; then kitten_bin="kitten"
+    elif command -v kitty >/dev/null 2>&1; then kitten_bin="kitty +kitten"; fi
+
+    local applied=0 sock
+    if [[ -n "$kitten_bin" ]]; then
+        while read -r sock; do
+            [[ -n "$sock" ]] || continue
+            if $kitten_bin @ --to "$sock" set-colors --all --configured "$file" >/dev/null 2>&1; then
+                applied=$(( applied + 1 ))
+            fi
+        done < <(sockets)
+    fi
+
+    if (( applied )); then
+        echo "theme: $name (applied to $applied running kitty instance(s))"
+    else
+        echo "theme: $name (next window; no reachable kitty socket)"
+    fi
+}
+
+case "${1-}" in
+    ''|-l|--list)  list ;;
+    -h|--help)     sed -n '2,26p' "$0" ;;
+    random)        apply "${THEMES[RANDOM % ${#THEMES[@]}]}" ;;
+    --next)
+        cur="$(current)"; idx=0
+        for i in "${!THEMES[@]}"; do [[ "${THEMES[$i]}" == "$cur" ]] && idx=$i; done
+        apply "${THEMES[$(( (idx + 1) % ${#THEMES[@]} ))]}"
+        ;;
+    *)
+        # resolve runs in a subshell, so its die() cannot stop this script.
+        # Capture the exit status explicitly instead of inlining the call.
+        name="$(resolve "$1")" || exit 1
+        apply "$name"
+        ;;
+esac
