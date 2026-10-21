@@ -1,0 +1,20 @@
+# GitHub Pages: README.md rendered with the Midnight Ink theme (_layouts/default.html).
+lang: en
+author: Yogesh
+tagline: "kitty terminal setup for molecular biology"
+nav:
+  - title: "Install"
+    url: "#install"
+  - title: "Usage"
+    url: "#usage"
+  - title: "Themes"
+    url: "#themes"
+license_name: "MIT"
+copyright: "© 2026 The biokitty contributors"
+defaults:
+  - scope:
+      path: ""
+    values:
+      image: /docs/screenshot.png
+plugins:
+  - jekyll-seo-tag
